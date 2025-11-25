@@ -25,5 +25,6 @@ def stream_users():
         if connection.is_connected():
             connection.close()
 
-
+for user in stream_users():
+    print(user)
 
