@@ -11,7 +11,7 @@ def stream_users_in_batches(batch_size):
         offset=0
         while True:
             cursor.execute("USE ALX_prodev;")
-            query= f"SELECT * from user_data ORDER BY user_id LIMIT {batch_size} offset {offset};"
+            query= f"SELECT * FROM user_data ORDER BY user_id LIMIT {batch_size} offset {offset};"
             cursor.execute(query)
             rows= cursor.fetchall()
             if not rows:
@@ -34,6 +34,7 @@ def stream_users_in_batches(batch_size):
 
 
 def batch_processing(batch_size):
+
     for row in stream_users_in_batches(batch_size):
         if row[3]>25:
             yield row
