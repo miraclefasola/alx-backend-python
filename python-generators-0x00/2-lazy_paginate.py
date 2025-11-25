@@ -9,7 +9,7 @@ def paginate_users(page_size, offset):
         database="ALX_prodev"
     )
     cursor = connection.cursor()
-    query = f"SELECT * FROM user_data ORDER BY user_id LIMIT {page_size} OFFSET {offset};"
+    query = f"SELECT * FROM user_data LIMIT {page_size} OFFSET {offset};"
     cursor.execute(query)
     rows = cursor.fetchall()
     cursor.close()
