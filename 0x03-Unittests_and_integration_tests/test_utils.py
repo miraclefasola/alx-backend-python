@@ -56,29 +56,33 @@ class TestGetJson(unittest.TestCase):
 
 
 class TestMemoize(unittest.TestCase):
+    """Tests for the memoize decorator."""
+
     def test_memoize(self):
+        """Test that memoize caches method results properly."""
 
         class TestClass:
+            """Simple class to test memoization behavior."""
 
             def a_method(self):
+                """Return a fixed value."""
                 return 42
 
             @memoize
             def a_property(self):
+                """Call a_method but memoize the result."""
                 return self.a_method()
-            
-        obj= TestClass()
 
-        with patch.object(TestClass, 'a_method', return_value=42) as mock_method:
-            result1 = obj.a_method
+        instance = TestClass()
 
-            result2 =obj.a_property
-            result3=obj.a_property
+        # Patch a_method so we can track how often it is called
+        with patch.object(TestClass, "a_method", return_value=42) as mock_method:
+            result1 = instance.a_property
+            result2 = instance.a_property
 
+            self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
-            self.assertEqual(result3, 42)
-
-            mock_method.assert_called_once_with()
+            mock_method.assert_called_once()
 
 
 
