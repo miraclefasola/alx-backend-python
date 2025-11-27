@@ -10,19 +10,23 @@ from unittest.mock import patch, MagicMock
 class TestAccessNestedMap(unittest.TestCase):
     """Test cases for access_nested_map function."""
 
-    @parameterized.expand([
-        ({"a": 1}, ("a",), 1),
-        ({"a": {"b": 2}}, ("a",), {"b": 2}),
-        ({"a": {"b": 2}}, ("a", "b"), 2),
-    ])
+    @parameterized.expand(
+        [
+            ({"a": 1}, ("a",), 1),
+            ({"a": {"b": 2}}, ("a",), {"b": 2}),
+            ({"a": {"b": 2}}, ("a", "b"), 2),
+        ]
+    )
     def test_access_nested_map(self, nested_map, path, expected):
         """Test access_nested_map returns the expected value."""
         self.assertEqual(access_nested_map(nested_map, path), expected)
 
-    @parameterized.expand([
-        ({}, ("a",), "a"),
-        ({"a": 1}, ("a", "b"), "b"),
-    ])
+    @parameterized.expand(
+        [
+            ({}, ("a",), "a"),
+            ({"a": 1}, ("a", "b"), "b"),
+        ]
+    )
     def test_access_nested_map_exception(self, nested_map, path, expected_msg):
         """Test access_nested_map raises KeyError with correct message."""
         with self.assertRaises(KeyError) as context:
@@ -33,10 +37,12 @@ class TestAccessNestedMap(unittest.TestCase):
 class TestGetJson(unittest.TestCase):
     """Test cases for utils.get_json function."""
 
-    @parameterized.expand([
-        ("http://example.com", {"payload": True}),
-        ("http://holberton.io", {"payload": False}),
-    ])
+    @parameterized.expand(
+        [
+            ("http://example.com", {"payload": True}),
+            ("http://holberton.io", {"payload": False}),
+        ]
+    )
     @patch("utils.requests.get")
     def test_get_json(self, test_url, test_payload, mock_get):
         """Test get_json returns expected payload without HTTP calls."""
@@ -71,9 +77,7 @@ class TestMemoize(unittest.TestCase):
 
         instance = TestClass()
 
-        with patch.object(
-        TestClass, "a_method", return_value=42
-        ) as mock_method:
+        with patch.object(TestClass, "a_method", return_value=42) as mock_method:
             result1 = instance.a_property
             result2 = instance.a_property
 

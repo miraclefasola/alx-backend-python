@@ -1,12 +1,10 @@
 import mysql.connector
 
+
 def paginate_users(page_size, offset):
     """Fetch a single page of users from the database."""
     connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="password",
-        database="ALX_prodev"
+        host="localhost", user="root", password="password", database="ALX_prodev"
     )
     cursor = connection.cursor()
     query = f"SELECT * FROM user_data LIMIT {page_size} OFFSET {offset};"

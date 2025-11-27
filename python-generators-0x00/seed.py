@@ -79,7 +79,8 @@ def insert_data(connection, csv_file):
     connection.commit()
     cursor.close()
 
-con= connectdb()
-db=create_database(con)
-table= create_table(con)
-data_into= insert_data(con, "user_data.csv")
+
+con = connectdb()
+db = create_database(con)
+table = create_table(con)
+data_into = insert_data(con, "user_data.csv")
