@@ -4,7 +4,7 @@
 import unittest
 from unittest.mock import patch
 from parameterized import parameterized
-
+from unittest.mock import PropertyMock
 from client import GithubOrgClient
 
 
@@ -64,12 +64,10 @@ class TestGithubOrgClient(unittest.TestCase):
         # Fake URL returned by _public_repos_url property
         fake_url = "https://api.github.com/orgs/google/repos"
 
-        with patch.object(
-            GithubOrgClient,
-            "_public_repos_url",
-            new_callable=property,
-            return_value=fake_url,
-        ):
+        with patch(
+            "client.GithubOrgClient._public_repos_url", new_callable=PropertyMock
+        ) as mock_prop:
+            mock_prop.return_value = "http://example.com/repos"
 
             client = GithubOrgClient("google")
             result = client.public_repos()
