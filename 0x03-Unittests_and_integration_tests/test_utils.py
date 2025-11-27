@@ -63,18 +63,14 @@ class TestMemoize(unittest.TestCase):
 
         class TestClass:
             """Simple class to test memoization behavior."""
-
             def a_method(self):
                 """Return a fixed value."""
                 return 42
-
             @memoize
             def a_property(self):
                 """Call a_method but memoize the result."""
                 return self.a_method()
-
         instance = TestClass()
-
         # Patch a_method so we can track how often it is called
         with patch.object(TestClass, "a_method", return_value=42) as mock_method:
             result1 = instance.a_property
@@ -83,8 +79,6 @@ class TestMemoize(unittest.TestCase):
             self.assertEqual(result1, 42)
             self.assertEqual(result2, 42)
             mock_method.assert_called_once()
-
-
 
 if __name__ == "__main__":
     unittest.main()
