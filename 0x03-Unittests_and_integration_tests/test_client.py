@@ -29,7 +29,7 @@ class TestGithubOrgClient(unittest.TestCase):
         result = client.org
 
         # Assertions
-        link= f"https://api.github.com/orgs/{org_name}"
+        link = f"https://api.github.com/orgs/{org_name}"
         mock_get_json.assert_called_once_with(link)
         self.assertEqual(result, expected_payload)
 
@@ -38,8 +38,8 @@ class TestGithubOrgClient(unittest.TestCase):
         """Test _public_repos_url property returns the correct value"""
 
         # Mocked payload returned by GithubOrgClient.org
-        pload="repos_url": "https://api.github.com/orgs/google/repos"
-        mock_payload = {pload}
+        pload = {"repos_url": "https://api.github.com/orgs/google/repos"}
+        mock_payload = pload
         mock_org.return_value = mock_payload
 
         client = GithubOrgClient("google")
