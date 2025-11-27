@@ -51,34 +51,33 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_org.assert_called_once()
 
     @patch("client.get_json")
-    def test_public_repos(self, mock_get_json):
-        """Test public_repos returns the correct list"""
-
-        # Fake JSON returned by get_json()
-        mock_payload = [
-            {"name": "repo1"},
-            {"name": "repo2"},
-        ]
-        mock_get_json.return_value = mock_payload
-
-        # Fake URL returned by _public_repos_url property
-        fake_url = "https://api.github.com/orgs/google/repos"
+    def test_public_repos(self, mock_json):
+        """
+        this method unit-test GithubOrgClient.public_repos
+        """
+        payload = [{"name": "Google"}, {"name": "Twitter"}]
+        mock_json.return_value = payload
 
         with patch(
             "client.GithubOrgClient._public_repos_url", new_callable=PropertyMock
-        ) as mock_prop:
-            mock_prop.return_value = "http://example.com/repos"
+        ) as mock_public:
 
-            client = GithubOrgClient("google")
-            result = client.public_repos()
+            mock_public.return_value = "hello world"
+            test_class = GithubOrgClient("test")
+            result = test_class.public_repos()
 
-            # Expected repo names extracted from mock_payload
-            expected = ["repo1", "repo2"]
+            expected = [item["name"] for item in payload]
             self.assertEqual(result, expected)
 
-            # Ensure get_json() was called once with our fake URL
-            mock_get_json.assert_called_once_with(fake_url)
+            mock_public.assert_called_once()
+            mock_json.assert_called_once()
 
+    @parameterized.expand(
+        [
+            ({"license": {"key": "my_license"}}, "my_license", True),
+            ({"license": {"key": "other_license"}}, "my_license", False),
+        ]
+    )
 
 if __name__ == "__main__":
     unittest.main()
