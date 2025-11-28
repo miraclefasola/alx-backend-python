@@ -14,6 +14,7 @@ class User(AbstractUser):
     phone_number= models.CharField(max_length=20, unique=True, null=True, blank=True)
     created_at= models.DateTimeField(auto_now_add=True)
     role= models.CharField(max_length=10, choices=USER_ROLES, default="guest")
+    #Alx instruction requires us to include password but django already handles that
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} {self.email}"
