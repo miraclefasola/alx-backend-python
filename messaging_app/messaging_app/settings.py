@@ -121,3 +121,23 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    # 1. Default Permissions
+    # 'DEFAULT_PERMISSION_CLASSES' specifies the permission classes that
+    # are checked before allowing access to a view.
+    # By setting it to IsAuthenticated, all API endpoints will require
+    # a user to be logged in (authenticated) by default.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+
+    # 2. Default Authentication Classes
+    # 'DEFAULT_AUTHENTICATION_CLASSES' specifies the mechanisms used to
+    # determine the user making the request.
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication', # Used for browser-based login/CSRF protection
+        'rest_framework.authentication.BasicAuthentication',   # Used for simple username/password authentication (optional, often removed)
+        # You would typically add TokenAuthentication or JWTAuthentication here for non-browser clients
+    ]
+}
