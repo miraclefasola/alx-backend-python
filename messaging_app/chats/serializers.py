@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from models import *
+from .models import *
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
@@ -7,10 +7,13 @@ from django.core.exceptions import ValidationError
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    full_name= serializers.CharField(source="get_full_name" ,read_only=True)
+    full_name= serializers.SerializerMethodField()
     class Meta:
         model= User
         fields=["user_id", "username","full_name","first_name", "last_name", "email", "phone_number", "created_at", "role" ]
+
+    def get_full_name(self, obj):
+        return f" {obj.first_name} {obj.last_name}"
 
 class MessageSerializer(serializers.ModelSerializer):
     
