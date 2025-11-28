@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     
     sender=serializers.StringRelatedField(read_only=True)
-    conversation_id= serializers.UUIDField(source="conversation.conversation_id", read_only=True)
+    conversation_id= serializers.CharField(source="conversation.conversation_id", read_only=True)
     class Meta:
         model= Message
         fields=["message_id", "sender","conversation_id", "message_body", "sent_at" ]
