@@ -14,6 +14,7 @@ class User(AbstractUser):
     phone_number= models.CharField(max_length=20, unique=True, null=True, blank=True)
     created_at= models.DateTimeField(auto_now_add=True)
     role= models.CharField(max_length=10, choices=USER_ROLES, default="guest")
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
     #Alx instruction requires us to include password but django already handles that
 
     def __str__(self):
@@ -21,17 +22,20 @@ class User(AbstractUser):
 
 
 class Conversation(models.Model):
-    conversation_id=models.CharField(default=uuid.uuid4, editable=False, unique=True, null=False, blank=True)
-    participants_id= models.ForeignKey(User, on_delete=models.CASCADE, related_name="participants")
+    conversation_id=models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=False, blank=True)
+    participants= models.ManyToManyField(User, related_name="conversations")
     created_at= models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True) 
 
+    def __str__(self):
+        return f" ID: {self.conversation_id}"
+
 class Message(models.Model):
-    message_id= models.CharField(default=uuid.uuid4, unique=True,editable=False ,null= False,db_index=True, primary_key=True)
-    sender_id=models.ForeignKey(User, on_delete=models.CASCADE, related_name="messages")
-    conversation_id=models.ForeignKey(Conversation, related_name="conversations", on_delete=models.CASCADE)
-    message_body = models.TextField(null=False, blank=True)
+    message_id= models.UUIDField(default=uuid.uuid4, unique=True,editable=False ,null= False,db_index=True, primary_key=True)
+    sender=models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
+    conversation=models.ForeignKey(Conversation, related_name="messages", on_delete=models.CASCADE)
+    message_body = models.TextField(null=False, blank=False)
     sent_at=models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Message {self.message_id} from {self.sender.username}"
+        return f"Message {self.message_id} from {self.sender.username}: {self.message_body[:20]}"

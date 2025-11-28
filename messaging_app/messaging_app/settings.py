@@ -141,3 +141,6 @@ REST_FRAMEWORK = {
         # You would typically add TokenAuthentication or JWTAuthentication here for non-browser clients
     ]
 }
+
+# settings.py
+AUTH_USER_MODEL = 'chats.User'
