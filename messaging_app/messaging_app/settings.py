@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework"
+    "rest_framework",
+    "chats"
 ]
 
 MIDDLEWARE = [
@@ -136,6 +137,7 @@ REST_FRAMEWORK = {
     # 'DEFAULT_AUTHENTICATION_CLASSES' specifies the mechanisms used to
     # determine the user making the request.
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
         'rest_framework.authentication.SessionAuthentication', # Used for browser-based login/CSRF protection
         'rest_framework.authentication.BasicAuthentication',   # Used for simple username/password authentication (optional, often removed)
         # You would typically add TokenAuthentication or JWTAuthentication here for non-browser clients

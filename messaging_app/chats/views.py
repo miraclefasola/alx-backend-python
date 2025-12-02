@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Count
 from rest_framework import filters
+from .permissions import IsParticipantOfConversation
 
 
 # Call the function to get the actual User model class
@@ -15,7 +16,7 @@ User = get_user_model()
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class= ConversationSerializer
-    permission_classes= [IsAuthenticated]
+    permission_classes= [IsAuthenticated, IsParticipantOfConversation]
 
     filter_backends=[filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["conversation_id", "participants", "created_at", "updated_at"]
@@ -56,11 +57,11 @@ class ConversationViewSet(viewsets.ModelViewSet):
     
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class= MessageSerializer
-    permission_classes=[IsAuthenticated]
+    permission_classes=[IsAuthenticated, IsParticipantOfConversation]
     filter_backends=[filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["sender__username", "sent_at", "conversation__conversation_id"]
-    ordering_fields = ["timestamp"]
-    ordering= ["timestamp"]
+    ordering_fields = []
+    ordering= []
 
     def get_queryset(self):
         return Message.objects.filter(conversation__participants=self.request.user)
