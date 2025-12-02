@@ -27,7 +27,9 @@ class ConversationViewSet(viewsets.ModelViewSet):
         # Collect the other participant's username from the request
         other_username = request.data.get("participant")
         if not other_username:
-            return Response({"detail": "Other participant username is required."}, status=400)
+            return Response(
+                {"detail": "Other participant username is required."}, status=400
+            )
 
         try:
             other_user = User.objects.get(username=other_username)
@@ -53,13 +55,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=201)
 
 
-
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated, IsParticipantOfConversation]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["sender__username", "sent_at", "conversation__conversation_id"]
-    filterset_class= MessageFilter
+    filterset_class = MessageFilter
     ordering_fields = []
     ordering = []
     pagination_class = MessagePagination
@@ -67,9 +68,12 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Message.objects.filter(conversation__participants=self.request.user)
 
+
 def create(self, request, *args, **kwargs):
     # 1. Get conversation_id from either body or URL kwargs
-    conversation_id = request.data.get("conversation_id") or self.kwargs.get("conversation_id")
+    conversation_id = request.data.get("conversation_id") or self.kwargs.get(
+        "conversation_id"
+    )
     if not conversation_id:
         return Response({"detail": "conversation_id is required."}, status=400)
 
@@ -86,8 +90,7 @@ def create(self, request, *args, **kwargs):
     # 3. Check if sender belongs to this conversation
     if not conversation.participants.filter(id=sender.id).exists():
         return Response(
-            {"detail": "You are not a participant in this conversation."},
-            status=403
+            {"detail": "You are not a participant in this conversation."}, status=403
         )
 
     # 4. Validate message body

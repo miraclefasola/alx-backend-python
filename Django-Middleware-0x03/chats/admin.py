@@ -11,7 +11,7 @@ from chats.models import *
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ["user_id","username", "email"]
+    list_display = ["user_id", "username", "email"]
 
 
 admin.site.register(User, UserAdmin)
