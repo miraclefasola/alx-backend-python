@@ -65,7 +65,7 @@ class RestrictAccessByTimeMiddleware:
 
 from django.core.cache import cache
 
-BANNED_WORDS = ["badword1", "badword2"]
+BANNED_WORDS = ["fuckyou", "pussy","kill" ,"suicide"]
 MAX_MESSAGES_PER_MINUTE = 5
 
 class OffensiveLanguageMiddleware:
@@ -85,6 +85,52 @@ class OffensiveLanguageMiddleware:
 
             cache.set(cache_key, count + 1, timeout=60)  # expires in 60 seconds
 
+            message_body = request.data.get("message_body", "") if hasattr(request, "data") else ""
+            if any(bad_word in message_body.lower() for bad_word in BANNED_WORDS):
+                return JsonResponse({"detail": "Offensive language is not allowed"}, status=400)
+
+
+
+        response = self.get_response(request)
+        return response
+
+
+# chats/middleware.py
+
+from django.http import JsonResponse
+from rest_framework import status
+import re
+
+class RolePermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        # List of regex patterns for protected endpoints
+        self.protected_patterns = [
+            r"^/api/messages/\d+/$",                        # message delete or detail
+            r"^/api/conversations/\d+/messages/\d+/$",     # nested message delete
+            r"^/api/conversations/\d+/$",                  # conversation delete
+        ]
+
+    def __call__(self, request, *args, **kwargs):
+        path = request.path
+
+        # Only enforce role check for protected patterns
+        for pattern in self.protected_patterns:
+            if re.match(pattern, path):
+                # Check authentication
+                if not request.user.is_authenticated:
+                    return JsonResponse(
+                        {"detail": "Authentication required"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+                # Check role
+                if request.user.role not in ["admin", "moderator"]:
+                    return JsonResponse(
+                        {"detail": "You do not have permission to perform this action"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                break  # Stop checking other patterns
 
         response = self.get_response(request)
         return response
