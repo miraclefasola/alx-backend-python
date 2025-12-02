@@ -21,10 +21,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     def test_public_repos_url(self):
         """Test that the result of _public_repos_url is correct"""
-        with patch(
-        "client.GithubOrgClient.org",
-        new_callable=PropertyMock
-        ) as mock:
+        with patch("client.GithubOrgClient.org", new_callable=PropertyMock) as mock:
 
             payload = {"repos_url": "Hello World"}
             mock.return_value = payload
@@ -41,10 +38,8 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_json.return_value = payload
 
         with patch(
-        "client.GithubOrgClient._public_repos_url",
-        new_callable=PropertyMock
+            "client.GithubOrgClient._public_repos_url", new_callable=PropertyMock
         ) as mock_public:
-
 
             mock_public.return_value = "hello world"
             test_class = GithubOrgClient("test")
@@ -69,11 +64,8 @@ class TestGithubOrgClient(unittest.TestCase):
 
 
 @parameterized_class(
-    ("org_payload", "repos_payload",
-     "expected_repos", "apache2_repos"),
-    TEST_PAYLOAD
+    ("org_payload", "repos_payload", "expected_repos", "apache2_repos"), TEST_PAYLOAD
 )
-
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests"""
 

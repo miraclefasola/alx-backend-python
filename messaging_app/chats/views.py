@@ -1,4 +1,3 @@
-
 from django.shortcuts import render
 from rest_framework import viewsets, status
 from .models import *
@@ -9,66 +8,77 @@ from rest_framework.response import Response
 from django.db.models import Count
 from rest_framework import filters
 from .permissions import IsParticipantOfConversation
-
+from chats.pagination import MessagePagination
+from chats.filters import MessageFilter
 
 # Call the function to get the actual User model class
 User = get_user_model()
 
-class ConversationViewSet(viewsets.ModelViewSet):
-    serializer_class= ConversationSerializer
-    permission_classes= [IsAuthenticated, IsParticipantOfConversation]
 
-    filter_backends=[filters.SearchFilter, filters.OrderingFilter]
+class ConversationViewSet(viewsets.ModelViewSet):
+    serializer_class = ConversationSerializer
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["conversation_id", "participants", "created_at", "updated_at"]
     ordering_fields = ["conversation_id", "participants", "created_at", "updated_at"]
-    ordering= ["conversation_id"]
-
+    ordering = ["conversation_id"]
+    pagination_class = MessagePagination
 
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
-    
+
     def create(self, request, *args, **kwargs):
-        participants=request.data.get('participants', [])
-        
+        participants = request.data.get("participants", [])
+
         if len(participants) != 2:
-            return Response({"detail": "A conversation requires exactly 2 participants." }, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "A conversation requires exactly 2 participants."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         found_users = list(User.objects.filter(user_id__in=participants))
         if len(found_users) != 2:
-            #This might look vague but the real id error would be logged by a logger, can be revealing the whole error as it might pose a risk to our app
-            return Response({"detail":"one user ID is invalid"}, status=400)
-        
+            # This might look vague but the real id error would be logged by a logger, can be revealing the whole error as it might pose a risk to our app
+            return Response({"detail": "one user ID is invalid"}, status=400)
 
         user_a = found_users[0]
         user_b = found_users[1]
 
-        existing = Conversation.objects.filter(participants=user_a).filter(participants=user_b).annotate(p_count=Count('participants')).filter(p_count=2).first()
+        existing = (
+            Conversation.objects.filter(participants=user_a)
+            .filter(participants=user_b)
+            .annotate(p_count=Count("participants"))
+            .filter(p_count=2)
+            .first()
+        )
 
-        if existing:    
+        if existing:
             return Response({"detail": "Coversation already exists, can't duplicate"})
         else:
-            serializer= self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception= True)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             conversation = serializer.save()
             conversation.participants.set([user_a, user_b])
             return Response(self.get_serializer(conversation).data, status=201)
 
 
-    
 class MessageViewSet(viewsets.ModelViewSet):
-    serializer_class= MessageSerializer
-    permission_classes=[IsAuthenticated, IsParticipantOfConversation]
-    filter_backends=[filters.SearchFilter, filters.OrderingFilter]
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["sender__username", "sent_at", "conversation__conversation_id"]
+    filterset_class= MessageFilter
     ordering_fields = []
-    ordering= []
+    ordering = []
+    pagination_class = MessagePagination
 
     def get_queryset(self):
         return Message.objects.filter(conversation__participants=self.request.user)
-    
+
     def create(self, request, *args, **kwargs):
-        #we need to grab conversation id, sender deatails
-        conversation_id= self.request.data.get('conversation_id')
-        sender= request.user
+        # we need to grab conversation id, sender deatails
+        conversation_id = self.request.data.get("conversation_id")
+        sender = request.user
 
         """Now we need our error handdling on point
         1. We need to make sure conversation_ID is valid
@@ -84,15 +94,19 @@ class MessageViewSet(viewsets.ModelViewSet):
                 return Response({"detail": "Conversation not found."}, status=404)
             except serializer.ValidationError:
                 # Handles cases where conversation_id is not a valid UUID format
-                return Response({"detail": "Invalid Conversation ID format."}, status=400)
-        
+                return Response(
+                    {"detail": "Invalid Conversation ID format."}, status=400
+                )
+
         if not conversation.participants.filter(pk=sender.pk).exists():
-    # If the user is not a participant, deny access (403 Forbidden)
+            # If the user is not a participant, deny access (403 Forbidden)
             return Response(
-                {"detail": "You are not a participant in this conversation and cannot send messages."}, 
-                status=status.HTTP_403_FORBIDDEN
+                {
+                    "detail": "You are not a participant in this conversation and cannot send messages."
+                },
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
+
         # If all checks pass, proceed with message creation
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

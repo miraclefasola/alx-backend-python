@@ -1,5 +1,3 @@
-
-
 from django.contrib import admin
 from django.urls import path, include
 from chats import auth
@@ -10,5 +8,4 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),  # ✅ required for browsable API
     path("api/token/", auth.TokenObtainPair, name="token_obtain_pair"),
     path("api/token/refresh/", auth.TokenRefresh, name="token_refresh"),
-    
 ]
