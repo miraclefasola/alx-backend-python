@@ -129,27 +129,37 @@ REST_FRAMEWORK = {
     # are checked before allowing access to a view.
     # By setting it to IsAuthenticated, all API endpoints will require
     # a user to be logged in (authenticated) by default.
-    'DEFAULT_PERMISSION_CLASSES': [
+    "DEFAULT_PERMISSION_CLASSES": [
         'rest_framework.permissions.IsAuthenticated',
     ],
 
     # 2. Default Authentication Classes
     # 'DEFAULT_AUTHENTICATION_CLASSES' specifies the mechanisms used to
     # determine the user making the request.
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication', # Used for browser-based login/CSRF protection
-        'rest_framework.authentication.BasicAuthentication',   # Used for simple username/password authentication (optional, often removed)
+        'rest_framework.authentication.BasicAuthentication', ],  # Used for simple username/password authentication (optional, often removed)
         
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": ["rest_framework.pagination.PageNumberPagination"],
     "PAGE_SIZE": 20,
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
-    ]
-    ]
+    ],
+    
 }
 
 # settings.py
 AUTH_USER_MODEL = 'chats.User'
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "USER_ID_FIELD": "user_id",  # change this to match your custom PK
+    "USER_ID_CLAIM": "user_id",  # how it appears in the JWT payload
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+

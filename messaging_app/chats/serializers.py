@@ -30,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
 
-    sender = serializers.StringRelatedField(read_only=True)
+    sender = serializers.UUIDField(read_only=True)
     conversation_id = serializers.CharField(
         source="conversation.conversation_id", read_only=True
     )
@@ -41,23 +41,17 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    participants = UserSerializer(many=True, read_only=True)
+    participants = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=User.objects.all()
+    )
     messages = MessageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Conversation
-        fields = [
-            "conversation_id",
-            "messages",
-            "participants",
-            "created_at",
-            "updated_at",
-        ]
+        fields = ["conversation_id", "participants", "messages", "created_at", "updated_at"]
 
-    def validate(self, attrs):
-        participants = attrs.get("participants", [])
-        if len(participants) < 2:
-            raise serializers.ValidationError(
-                "A coversation should involve two Participants"
-            )
-        return attrs
+    def validate_participants(self, value):
+        if len(value) != 2:
+            raise serializers.ValidationError("A conversation should involve exactly two participants")
+        return value
