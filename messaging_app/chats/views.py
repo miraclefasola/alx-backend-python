@@ -17,49 +17,41 @@ User = get_user_model()
 
 class ConversationViewSet(viewsets.ModelViewSet):
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
-
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["conversation_id", "participants", "created_at", "updated_at"]
-    ordering_fields = ["conversation_id", "participants", "created_at", "updated_at"]
-    ordering = ["conversation_id"]
+    permission_classes = [IsAuthenticated]
     pagination_class = MessagePagination
 
     def get_queryset(self):
         return Conversation.objects.filter(participants=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        participants = request.data.get("participants", [])
+        # Collect the other participant's username from the request
+        other_username = request.data.get("participant")
+        if not other_username:
+            return Response({"detail": "Other participant username is required."}, status=400)
 
-        if len(participants) != 2:
-            return Response(
-                {"detail": "A conversation requires exactly 2 participants."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        found_users = list(User.objects.filter(user_id__in=participants))
-        if len(found_users) != 2:
-            # This might look vague but the real id error would be logged by a logger, can be revealing the whole error as it might pose a risk to our app
-            return Response({"detail": "one user ID is invalid"}, status=400)
+        try:
+            other_user = User.objects.get(username=other_username)
+        except User.DoesNotExist:
+            return Response({"detail": "User does not exist."}, status=404)
 
-        user_a = found_users[0]
-        user_b = found_users[1]
-
+        # Check if a conversation between these two users already exists
         existing = (
-            Conversation.objects.filter(participants=user_a)
-            .filter(participants=user_b)
+            Conversation.objects.filter(participants=request.user)
+            .filter(participants=other_user)
             .annotate(p_count=Count("participants"))
             .filter(p_count=2)
             .first()
         )
-
         if existing:
-            return Response({"detail": "Coversation already exists, can't duplicate"})
-        else:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            conversation = serializer.save()
-            conversation.participants.set([user_a, user_b])
-            return Response(self.get_serializer(conversation).data, status=201)
+            return Response({"detail": "Conversation already exists."}, status=400)
+
+        # Create conversation and set participants
+        conversation = Conversation.objects.create()
+        conversation.participants.set([request.user, other_user])
+
+        serializer = self.get_serializer(conversation)
+        return Response(serializer.data, status=201)
+
 
 
 class MessageViewSet(viewsets.ModelViewSet):
