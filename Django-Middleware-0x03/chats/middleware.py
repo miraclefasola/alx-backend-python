@@ -97,11 +97,10 @@ class OffensiveLanguageMiddleware:
 
 # chats/middleware.py
 
-from django.http import JsonResponse
-from rest_framework import status
+
 import re
 
-class RolePermissionMiddleware:
+class RolepermissionMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
         # List of regex patterns for protected endpoints
