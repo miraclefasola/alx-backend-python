@@ -1,8 +1,12 @@
 
 import logging
-from rest_framework import status
-from rest_framework.response import Response
 from datetime import datetime
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+from django.contrib.auth import get_user_model
+
+User= get_user_model()
+
 class RequestLoggingMiddleware():
     def __init__(self, get_response):
         self.get_response=get_response
@@ -13,16 +17,28 @@ class RequestLoggingMiddleware():
                     fmt="%(name)s : %(asctime)s : %(levelname)s : %(pathname)s: %(funcName)s : %(message)s"
                 )
         file_handler = logging.FileHandler("requests.log")
-        self.logger.addHandler(file_handler)
         file_handler.setFormatter(formatter)
+        self.logger.addHandler(file_handler)
+        
         file_handler.setLevel(logging.INFO)
 
-    def __call__(self,request, *args, **kwds):
+    def __call__(self, request, *args, **kwds):
 
+        try:
+            user_auth = JWTAuthentication()
+            auth_result = user_auth.authenticate(request)
+            if auth_result is not None:
+                request.user = auth_result[0]
+        except Exception:
+            pass
 
+        
         if not request.user.is_authenticated:
-            return Response({'detail':'user must authenticated'}, status=status.HTTP_403_FORBIDDEN)
-        self.logger.info (f"{datetime.now()} - User: {request.user.username} - Path: {request.path}")
+            user = "Guest"
+        else:
+            user = request.user.username
+
+        self.logger.info (f"{datetime.now()} - User: {user} - Path: {request.path}")
         
         
 

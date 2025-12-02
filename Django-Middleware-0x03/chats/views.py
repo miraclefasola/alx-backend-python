@@ -67,43 +67,34 @@ class MessageViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Message.objects.filter(conversation__participants=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        # we need to grab conversation id, sender deatails
-        conversation_id = self.request.data.get("conversation_id")
-        sender = request.user
+def create(self, request, *args, **kwargs):
+    # 1. Get conversation_id from either body or URL kwargs
+    conversation_id = request.data.get("conversation_id") or self.kwargs.get("conversation_id")
+    if not conversation_id:
+        return Response({"detail": "conversation_id is required."}, status=400)
 
-        """Now we need our error handdling on point
-        1. We need to make sure conversation_ID is valid
-        2. Confirm sender is active in DB
-        3. Confirm the sender has established a conversation and therefore has rigts to send mesages and attach to a conversation
-        """
-        if conversation_id:
-            try:
-                # Attempt to retrieve the conversation instance by ID
-                conversation = Conversation.objects.get(conversation_id=conversation_id)
-            except Conversation.DoesNotExist:
-                # If not found, return a 404 (Not Found)
-                return Response({"detail": "Conversation not found."}, status=404)
-            except serializer.ValidationError:
-                # Handles cases where conversation_id is not a valid UUID format
-                return Response(
-                    {"detail": "Invalid Conversation ID format."}, status=400
-                )
+    sender = request.user
 
-        if not conversation.participants.filter(pk=sender.pk).exists():
-            # If the user is not a participant, deny access (403 Forbidden)
-            return Response(
-                {
-                    "detail": "You are not a participant in this conversation and cannot send messages."
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
+    # 2. Validate the conversation_id and fetch the conversation object
+    try:
+        conversation = Conversation.objects.get(conversation_id=conversation_id)
+    except Conversation.DoesNotExist:
+        return Response({"detail": "Conversation not found."}, status=404)
+    except Exception:
+        return Response({"detail": "Invalid Conversation ID format."}, status=400)
 
-        # If all checks pass, proceed with message creation
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    # 3. Check if sender belongs to this conversation
+    if not conversation.participants.filter(id=sender.id).exists():
+        return Response(
+            {"detail": "You are not a participant in this conversation."},
+            status=403
+        )
 
-        # Inject the validated conversation instance and the sender into the save process
-        message = serializer.save(conversation=conversation, sender=sender)
+    # 4. Validate message body
+    serializer = self.get_serializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
 
-        return Response(self.get_serializer(message).data, status=201)
+    # 5. Save with injected conversation + sender
+    message = serializer.save(conversation=conversation, sender=sender)
+
+    return Response(self.get_serializer(message).data, status=201)
