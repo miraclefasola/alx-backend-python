@@ -3,6 +3,7 @@ from datetime import datetime
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.http import JsonResponse
 from rest_framework import status
+import time
 
 from django.contrib.auth import get_user_model
 
@@ -58,5 +59,32 @@ class RestrictAccessByTimeMiddleware:
                 {"detail": "You're not allowed to chat at this time"},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        response = self.get_response(request)
+        return response
+
+
+from django.core.cache import cache
+
+BANNED_WORDS = ["badword1", "badword2"]
+MAX_MESSAGES_PER_MINUTE = 5
+
+class OffensiveLanguageMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.method == "POST":
+            ip = request.META.get("REMOTE_ADDR", "unknown")
+
+            # --- Rate Limiting ---
+            cache_key = f"msg_count_{ip}"
+            count = cache.get(cache_key, 0)
+
+            if count >= MAX_MESSAGES_PER_MINUTE:
+                return JsonResponse({"detail": "Too many messages, try again later"}, status=429)
+
+            cache.set(cache_key, count + 1, timeout=60)  # expires in 60 seconds
+
+
         response = self.get_response(request)
         return response
