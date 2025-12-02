@@ -1,6 +1,6 @@
 
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from .models import *
 from django.contrib.auth import get_user_model
 from .serializers import *
@@ -31,8 +31,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
         participants=request.data.get('participants', [])
         
         if len(participants) != 2:
-            return Response({"detail": "A conversation requires exactly 2 participants." }, status=400)
-
+            return Response({"detail": "A conversation requires exactly 2 participants." }, status=status.HTTP_400_BAD_REQUEST)
         found_users = list(User.objects.filter(user_id__in=participants))
         if len(found_users) != 2:
             #This might look vague but the real id error would be logged by a logger, can be revealing the whole error as it might pose a risk to our app
@@ -91,7 +90,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     # If the user is not a participant, deny access (403 Forbidden)
             return Response(
                 {"detail": "You are not a participant in this conversation and cannot send messages."}, 
-                status=403
+                status=status.HTTP_403_FORBIDDEN
             )
         
         # If all checks pass, proceed with message creation
