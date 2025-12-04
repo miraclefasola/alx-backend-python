@@ -33,3 +33,37 @@ def log_message_edit(sender, instance, **kwargs):
             edited_by=instance.edited_by,  # ✅ log who did the edit
         )
         instance.edited = True
+
+@receiver(pre_save, sender=Message)
+def log_message_edit(sender, instance, **kwargs):
+    """Log old content before a message is updated"""
+    if not instance.pk:  # skip if it's a new message
+        return
+
+    try:
+        old_message = Message.objects.get(pk=instance.pk)
+    except Message.DoesNotExist:
+        return
+
+    # If content changed, log it in history
+    if old_message.content != instance.content:
+        MessageHistory.objects.create(
+            message=instance,
+            old_content=old_message.content,
+            edited_by=instance.edited_by,  # ✅ log who did the edit
+        )
+        instance.edited = True
+
+
+@receiver(post_delete, sender=User)
+def cleanup_user_related_data(sender, instance, **kwargs):
+    """Delete all user-related data when the user account is deleted"""
+    # Delete messages sent or received by the user
+    Message.objects.filter(sender=instance).delete()
+    Message.objects.filter(receiver=instance).delete()
+
+    # Delete notifications for the user
+    Notification.objects.filter(user=instance).delete()
+
+    # Delete message histories where they were editor
+    MessageHistory.objects.filter(edited_by=instance).delete()

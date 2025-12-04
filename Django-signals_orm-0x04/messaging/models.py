@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from managers import UnreadMessagesManager
 
 User= get_user_model()
 
@@ -16,6 +17,24 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False) 
+    parent_message = models.ForeignKey(
+        "self", null=True, blank=True, related_name="replies", on_delete=models.CASCADE
+    )
+      # Managers
+    objects = models.Manager()  # default manager
+    unread = UnreadMessagesManager()  # custom unread manager
+
+    def __str__(self):
+        return f"from {self.sender} to {self.receiver}: {self.content[:20]}"
+
+    """ Recursive function to fetch replies """
+
+    def get_thread(self):
+        """Fetch this message and all its replies recursively"""
+        thread = [self]
+        for reply in self.replies.all().select_related("sender", "receiver"):
+            thread.extend(reply.get_thread())
+        return thread
 
 class MessageHistory(models.Model):
     """Stores previous versions of a message before edits"""
@@ -35,6 +54,7 @@ class MessageHistory(models.Model):
 
     def __str__(self):
         return f"History of Message {self.message.id} at {self.edited_at}"
+
 
 
 
