@@ -115,3 +115,4 @@ class MessageThreadView(LoginRequiredMixin, TemplateView):
 
 
 ["user.delete()", "delete_user"]
+["sender=request.user"]
