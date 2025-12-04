@@ -112,3 +112,6 @@ class MessageThreadView(LoginRequiredMixin, TemplateView):
         return thread
 
 
+
+
+["user.delete()", "delete_user"]
